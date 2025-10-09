@@ -17,7 +17,7 @@ def relatorio_selecao_inicial():
     )
 
     st.dataframe(
-        df_rhnr_inicial[df_rhnr_inicial["Código"].isin([10100000, 11500000, 12351000])],
+        df_rhnr_inicial[df_rhnr_inicial["Código da Estação"].isin([10100000, 11500000, 12351000])],
         hide_index=True,
     )
 

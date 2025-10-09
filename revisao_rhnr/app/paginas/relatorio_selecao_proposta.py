@@ -11,7 +11,7 @@ from revisao_rhnr.app.paginas.dataframe_styling import highlight_rows_by_categor
 @st.cache_data
 def relatorio_selecao_proposta():
     df_rhnr_filtro = df_rhnr_inicial[
-        df_rhnr_inicial["Código"].isin(
+        df_rhnr_inicial["Código da Estação"].isin(
             [
                 est["Código da Estação"]
                 for est in estacoes_rhnr_proposta
@@ -21,7 +21,7 @@ def relatorio_selecao_proposta():
     ]
 
     df_rhnr_perm = df_rhnr_proposta[
-        df_rhnr_proposta["Código da Estação"].isin(df_rhnr_filtro["Código"])
+        df_rhnr_proposta["Código da Estação"].isin(df_rhnr_filtro["Código da Estação"])
     ]
 
     st.subheader(
@@ -40,7 +40,7 @@ def relatorio_selecao_proposta():
     )
 
     df_rhnr_adicionais = df_rhnr_proposta[
-        ~df_rhnr_proposta["Código da Estação"].isin(df_rhnr_inicial["Código"])
+        ~df_rhnr_proposta["Código da Estação"].isin(df_rhnr_inicial["Código da Estação"])
     ]
 
     st.subheader(

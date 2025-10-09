@@ -14,7 +14,6 @@ class Base(DeclarativeBase): ...
 
 class EstacaoFlu(Base):
     __tablename__ = "estacao_flu"
-    __table_args__ = {"schema": "estacoes"}
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
     nome: Mapped[str]
@@ -36,7 +35,6 @@ class EstacaoFlu(Base):
 
 class Bacia(Base):
     __tablename__ = "bacia"
-    __table_args__ = {"schema": "estacoes"}
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
     nome: Mapped[str]
@@ -44,7 +42,6 @@ class Bacia(Base):
 
 class Entidade(Base):
     __tablename__ = "entidade"
-    __table_args__ = {"schema": "estacoes"}
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
     sigla: Mapped[str]
@@ -53,7 +50,6 @@ class Entidade(Base):
 
 class Responsavel(Base):
     __tablename__ = "responsavel"
-    __table_args__ = {"schema": "estacoes"}
 
     codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
     responsavel_codigo: Mapped[int]
@@ -63,7 +59,6 @@ class Responsavel(Base):
 
 class Operadora(Base):
     __tablename__ = "operadora"
-    __table_args__ = {"schema": "estacoes"}
 
     codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
     operadora_codigo: Mapped[int]
@@ -73,7 +68,6 @@ class Operadora(Base):
 
 class EstacaoRHNRSelecaoInicial(Base):
     __tablename__ = "estacoes_rhnr_selecao_inicial"
-    __table_args__ = {"schema": "revisao_rhnr"}
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
     objetivo1: Mapped[int] = mapped_column(SmallInteger)
@@ -86,7 +80,6 @@ class EstacaoRHNRSelecaoInicial(Base):
 
 class EstacaoPropostaRHNR(Base):
     __tablename__ = "estacoes_proposta_rhnr"
-    __table_args__ = {"schema": "revisao_rhnr"}
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
     tipo_estacao: Mapped[str] = mapped_column(String(5), nullable=False)
@@ -102,7 +95,6 @@ class EstacaoPropostaRHNR(Base):
 
 class ObjetivoEspecificoEstacaoProposta(Base):
     __tablename__ = "obj_espec_estacoes_propostas"
-    __table_args__ = {"schema": "revisao_rhnr"}
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
     obj_1a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
@@ -131,40 +123,11 @@ class ObjetivoEspecificoEstacaoProposta(Base):
 
 class EstacaoRedundante(Base):
     __tablename__ = "estacoes_redundantes"
-    __table_args__ = {"schema": "revisao_rhnr"}
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     codigo: Mapped[int] = mapped_column(nullable=False)
     codigo_redundante: Mapped[int] = mapped_column(nullable=False)
     tipo_estacao: Mapped[str] = mapped_column(String(10), nullable=False)
-
-
-class EstacaoHidroRef(Base):
-    __tablename__ = "estacaoes_hidrorreferenciadas"
-    __table_args__ = {"schema": "hidrorreferenciamento"}
-
-    codigo: Mapped[int] = mapped_column(primary_key=True)
-    area_drenagem: Mapped[float | None]
-    nome_rio: Mapped[str]
-    cotrecho: Mapped[str]
-    cocursodag: Mapped[str]
-    cobacia: Mapped[str]
-    noriocomp: Mapped[str]
-    nuareamont: Mapped[float]
-    distancia_m: Mapped[float]
-    tipo_href: Mapped[TipoHidroRef]
-
-
-class EstacaoComObjetivos(Base):
-    __tablename__ = "estacoes_objetivos_por_area2"
-    __table_args__ = {"schema": "objetivos_rhnr"}
-
-    codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
-    cobacia_estacao: Mapped[str] = mapped_column(primary_key=True)
-    cobacia_obj: Mapped[str] = mapped_column(primary_key=True)
-    criterio: Mapped[str] = mapped_column(primary_key=True)
-    dist_obj_km: Mapped[float]
-    prop_areas: Mapped[float]
 
 
 if __name__ == "__main__":
