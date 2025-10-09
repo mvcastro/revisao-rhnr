@@ -46,9 +46,9 @@ def revisao_rhnr() -> None:
         "Operadora",
         "Bacia",
         "Operando",
+        "RHNR Inicial?",
         "Integra RHNR?",
         "Ação Proposta",
-        "RHNR Inicial?"
     ]
     pill_dictionary = create_dictionary_select_options(df_rhnr_proposta, pills_options)
 
