@@ -70,11 +70,9 @@ def join_dataframes_proposta_rhnr(
     df1: pd.DataFrame, df2: pd.DataFrame, filtro: list[dict]
 ):
     df = df1.merge(df2, on="Código da Estação", how="left")
-
     df["RHNR Inicial?"] = df["Código da Estação"].isin(
         [est["Código"] for est in filtro]
     )
-
     return df
 
 
@@ -92,4 +90,4 @@ df_rhnr_proposta = join_dataframes_proposta_rhnr(
     pd.DataFrame(estacoes_rhnr_proposta),
     pd.DataFrame(objetivos_especificos),
     dict_rhrnr_inicial,
-)
+)[list(get_args(ColunaRHNRProposta.__value__))]

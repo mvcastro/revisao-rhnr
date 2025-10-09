@@ -37,11 +37,11 @@ type ColunaRHNRProposta = Literal[
     "Bacia",
     "Operando",
     "Tipologia Atual",
+    "RHNR Inicial?",
+    "Ação Proposta",
     "Tipologia Proposta",
     "Integra RHNR?",
-    "Ação Proposta",
     "Objs. Específicos",
-    "RHNR Inicial?"
 ]
 
 
