@@ -3,7 +3,7 @@ from typing import Any, Literal, cast
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
-from revisao_rhnr.databases.models import (
+from revisao_rhnr.databases.models_sqlite import (
     Bacia,
     Entidade,
     EstacaoFlu,

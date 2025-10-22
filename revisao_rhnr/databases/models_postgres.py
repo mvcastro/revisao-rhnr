@@ -3,13 +3,15 @@ from datetime import date
 from typing import Literal
 
 from dotenv import load_dotenv
-from sqlalchemy import SmallInteger, String, create_engine
+from sqlalchemy import ForeignKey, SmallInteger, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 TipoHidroRef = Literal["Área de Drenagem", "Nome do Rio", "Desmias Estações"]
 
 
-class Base(DeclarativeBase): ...
+class Base(DeclarativeBase):
+    def to_dict(self):
+        return {field.name: getattr(self, field.name) for field in self.__table__.c}
 
 
 class EstacaoFlu(Base):
@@ -18,20 +20,30 @@ class EstacaoFlu(Base):
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
     nome: Mapped[str]
-    codigo_adicional: Mapped[str]
+    codigo_adicional: Mapped[str | None]
     latitude: Mapped[float]
     longitude: Mapped[float]
-    altitude: Mapped[float]
+    altitude: Mapped[float | None]
     area_drenagem: Mapped[float | None]
-    bacia_codigo: Mapped[int]
-    subbacia_codigo: Mapped[int]
-    rio_codigo: Mapped[int | None]
-    estado_codigo: Mapped[int]
-    municipio_codigo: Mapped[int]
+    bacia_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.bacia.codigo"))
+    subbacia_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.subbacia.codigo"))
+    estado_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.estado.codigo"))
+    municipio_codigo: Mapped[int] = mapped_column(
+        ForeignKey("estacoes.municipio.codigo")
+    )
     ultima_atualizacao: Mapped[date]
     operando: Mapped[int]
     descricao: Mapped[str]
     historico: Mapped[str]
+
+
+class Entidade(Base):
+    __tablename__ = "entidade"
+    __table_args__ = {"schema": "estacoes"}
+
+    codigo: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str]
+    sigla: Mapped[str]
 
 
 class Bacia(Base):
@@ -42,13 +54,47 @@ class Bacia(Base):
     nome: Mapped[str]
 
 
-class Entidade(Base):
-    __tablename__ = "entidade"
+class SubBacia(Base):
+    __tablename__ = "subbacia"
     __table_args__ = {"schema": "estacoes"}
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str]
+    jurisdicao: Mapped[int | None] = mapped_column(
+        ForeignKey("estacoes.entidade.codigo"), nullable=True
+    )
+    bacia_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.bacia.codigo"))
+
+
+class Rio(Base):
+    __tablename__ = "rio"
+    __table_args__ = {"schema": "estacoes"}
+
+    codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str]
+    jurisdicao: Mapped[int] = mapped_column(ForeignKey("estacoes.entidade.codigo"))
+    bacia_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.bacia.codigo"))
+    subbacia_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.subbacia.codigo"))
+
+
+class Estado(Base):
+    __tablename__ = "estado"
+    __table_args__ = {"schema": "estacoes"}
+
+    codigo: Mapped[int] = mapped_column(primary_key=True)
+    codigo_ibge: Mapped[int]
     sigla: Mapped[str]
     nome: Mapped[str]
+
+
+class Municipio(Base):
+    __tablename__ = "municipio"
+    __table_args__ = {"schema": "estacoes"}
+
+    codigo: Mapped[int] = mapped_column(primary_key=True)
+    codigo_ibge: Mapped[int]
+    nome: Mapped[str]
+    estado_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.estado.codigo"))
 
 
 class Responsavel(Base):
@@ -56,9 +102,11 @@ class Responsavel(Base):
     __table_args__ = {"schema": "estacoes"}
 
     codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
-    responsavel_codigo: Mapped[int]
-    responsavel_unidade: Mapped[int]
-    responsavel_jurisdicao: Mapped[int]
+    responsavel_codigo: Mapped[int] = mapped_column(
+        ForeignKey("estacoes.entidade.codigo")
+    )
+    responsavel_unidade: Mapped[int | None]
+    responsavel_jurisdicao: Mapped[int | None]
 
 
 class Operadora(Base):
@@ -66,9 +114,24 @@ class Operadora(Base):
     __table_args__ = {"schema": "estacoes"}
 
     codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
-    operadora_codigo: Mapped[int]
-    operadora_unidade: Mapped[int]
-    operadora_subunidade: Mapped[int]
+    operadora_codigo: Mapped[int] = mapped_column(
+        ForeignKey("estacoes.entidade.codigo")
+    )
+    operadora_unidade: Mapped[int | None]
+    operadora_subunidade: Mapped[int | None]
+
+
+class TipoEstacaoFlu(Base):
+    __tablename__ = "tipo_estacao_flu"
+    __table_args__ = {"schema": "estacoes"}
+
+    codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
+    escala: Mapped[bool]
+    registrador_nivel: Mapped[bool]
+    descarga_liquida: Mapped[bool]
+    sedimentos: Mapped[bool]
+    qualidade_agua: Mapped[bool]
+    telemetrica: Mapped[bool]
 
 
 class EstacaoRHNRSelecaoInicial(Base):
