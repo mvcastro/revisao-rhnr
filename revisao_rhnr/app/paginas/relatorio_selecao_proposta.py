@@ -1,9 +1,9 @@
 import streamlit as st
 
 from revisao_rhnr.app.data import (
+    df_estacoes_rhnr_proposta,
     df_rhnr_inicial,
     df_rhnr_proposta,
-    estacoes_rhnr_proposta,
 )
 from revisao_rhnr.app.paginas.dataframe_styling import highlight_rows_by_category
 
@@ -12,10 +12,10 @@ from revisao_rhnr.app.paginas.dataframe_styling import highlight_rows_by_categor
 def relatorio_selecao_proposta():
     df_rhnr_filtro = df_rhnr_inicial[
         df_rhnr_inicial["Código da Estação"].isin(
-            [
-                est["Código da Estação"]
-                for est in estacoes_rhnr_proposta
-                if est["Integra RHNR?"]
+            df_estacoes_rhnr_proposta[
+                (~df_estacoes_rhnr_proposta["Integra RHNR?"].isnull()) &
+                (df_estacoes_rhnr_proposta["Integra RHNR?"])][
+                "Código da Estação"
             ]
         )
     ]
@@ -40,7 +40,9 @@ def relatorio_selecao_proposta():
     )
 
     df_rhnr_adicionais = df_rhnr_proposta[
-        ~df_rhnr_proposta["Código da Estação"].isin(df_rhnr_inicial["Código da Estação"])
+        ~df_rhnr_proposta["Código da Estação"].isin(
+            df_rhnr_inicial["Código da Estação"]
+        )
     ]
 
     st.subheader(

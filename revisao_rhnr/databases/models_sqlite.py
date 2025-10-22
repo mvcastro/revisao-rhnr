@@ -8,7 +8,9 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 TipoHidroRef = Literal["Área de Drenagem", "Nome do Rio", "Desmias Estações"]
 
 
-class Base(DeclarativeBase): ...
+class Base(DeclarativeBase):
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class EstacaoFlu(Base):
@@ -150,9 +152,6 @@ class EstacaoPropostaRHNR(Base):
     observacao: Mapped[str] = mapped_column(nullable=True)
     proposta_operacao: Mapped[str] = mapped_column(nullable=True)
 
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
 
 class ObjetivoEspecificoEstacaoProposta(Base):
     __tablename__ = "obj_espec_estacoes_propostas"
@@ -179,9 +178,6 @@ class ObjetivoEspecificoEstacaoProposta(Base):
     obj_6d: Mapped[int] = mapped_column(SmallInteger, nullable=True)
     obj_6e: Mapped[int] = mapped_column(SmallInteger, nullable=True)
     obj_6f: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-
-    def to_dict(self):
-        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class EstacaoRedundante(Base):

@@ -7,6 +7,7 @@ import streamlit as st
 
 from revisao_rhnr.app.data import (
     ColunaTabelaRHNRProposta,
+    df_estacoes_potenciais,
     df_estacoes_validadas,
     df_rhnr_inicial,
     df_rhnr_proposta,
@@ -33,6 +34,11 @@ def padroniza_dicionario_rhnr(dataframe: pd.DataFrame) -> dict:
 
 @st.cache_data
 def adiciona_estacoes_rhrn_inicial_e_validadas() -> pd.DataFrame:
+    
+    dict_ests_potenciais = padroniza_dicionario_rhnr(df_estacoes_potenciais)
+    df_rede_potencial = pd.DataFrame(dict_ests_potenciais)
+    df_rede_potencial["RHNR Inicial?"] = False
+    
     dict_rede_inicial = padroniza_dicionario_rhnr(df_rhnr_inicial)
     df_rede_inicial = pd.DataFrame(dict_rede_inicial)
     df_rede_inicial["RHNR Inicial?"] = True
@@ -62,6 +68,7 @@ def adiciona_estacoes_rhrn_inicial_e_validadas() -> pd.DataFrame:
                 df_rhnr_proposta,
                 df_rede_inicial_sem_proposta,
                 df_rede_validada_sem_inicial_e_sem_proposta,
+                df_rede_potencial
             ]
         )
         .sort_values(by="Código da Estação")
@@ -133,7 +140,11 @@ def revisao_rhnr() -> None:
             valores_filtro = st.selectbox(
                 label="Selecione o valor a filtar:",
                 index=None,
-                options=select_dicionario[select_campo],  # type: ignore
+                options=[
+                    option
+                    for option in select_dicionario[select_campo]
+                    if option is not None
+                ],  # type: ignore
                 placeholder=f"Selecione um valor do campo {select_campo} para filtrar",
             )
 
@@ -141,8 +152,12 @@ def revisao_rhnr() -> None:
         "Coluna a destacar:", pills_options, selection_mode="single"
     )
 
-    if select_campo is not None and valores_filtro is not None:
-        df_selecao = df_rhnr_final[df_rhnr_final[select_campo] == valores_filtro]
+    if select_campo is not None:
+        # and valores_filtro is not None:
+        if valores_filtro is None:
+            df_selecao = df_rhnr_final[df_rhnr_final[select_campo].isna()]
+        else:
+            df_selecao = df_rhnr_final[df_rhnr_final[select_campo] == valores_filtro]
     else:
         df_selecao = df_rhnr_final
 
