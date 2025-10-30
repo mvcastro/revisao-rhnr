@@ -43,15 +43,32 @@ def migra_dados_dos_bancos():
 
     engine_bases_cplar = create_engine_bases_cplar()
     engine_local = create_local_engine()
+    models_sqlite.Base.metadata.create_all(bind=engine_local)
+    
+    print("Engine URL:", engine_bases_cplar.url)
+    print("Engine URL:", engine_local.url)
 
     for nome_classe, classe in classes.items():
+        
+        if nome_classe == "Base":
+            continue
+        
+        print(f"Migrating data for class: {nome_classe}")
         instances = get_data_from_base_class(engine_bases_cplar, classe)
 
         new_class = getattr(models_sqlite, nome_classe)
         new_instances = [new_class(**instance.to_dict()) for instance in instances]
         with Session(engine_local) as local_session:
+            # Delete existing data in local database
+            if "postgresql" in str(engine_local.url):
+                raise ConnectionError("This operation is only allowed on SQLite databases.")
+            local_session.query(new_class).delete()
+            
+            # Add new data to local database
             local_session.add_all(new_instances)
             local_session.commit()
+
+        print(f"Migrated {len(new_instances)} records for {nome_classe}")
 
 
 if __name__ == "__main__":

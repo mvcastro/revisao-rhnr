@@ -1,11 +1,8 @@
 from datetime import date
 from pathlib import Path
-from typing import Literal
 
 from sqlalchemy import ForeignKey, SmallInteger, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-TipoHidroRef = Literal["Área de Drenagem", "Nome do Rio", "Desmias Estações"]
 
 
 class Base(DeclarativeBase):
@@ -66,7 +63,7 @@ class Rio(Base):
         ForeignKey("estacao_flu.codigo"), primary_key=True
     )
     nome: Mapped[str]
-    jurisdicao: Mapped[int] = mapped_column(ForeignKey("entidade.codigo"))
+    jurisdicao: Mapped[int] = mapped_column(ForeignKey("entidade.codigo"), nullable=True)
     bacia_codigo: Mapped[int] = mapped_column(ForeignKey("bacia.codigo"))
     subbacia_codigo: Mapped[int] = mapped_column(ForeignKey("subbacia.codigo"))
 
@@ -146,7 +143,7 @@ class EstacaoPropostaRHNR(Base):
         ForeignKey("estacao_flu.codigo"), primary_key=True
     )
     tipo_estacao: Mapped[str] = mapped_column(String(5), nullable=False)
-    proposta_operacao_temp: Mapped[str] = mapped_column(nullable=True)
+    proposta_operacao_planilha: Mapped[str] = mapped_column(nullable=True)
     proposta_tipo: Mapped[str] = mapped_column(String(5), nullable=True)
     proposta_integra_rhnr: Mapped[bool] = mapped_column(nullable=True)
     observacao: Mapped[str] = mapped_column(nullable=True)
@@ -156,28 +153,27 @@ class EstacaoPropostaRHNR(Base):
 class ObjetivoEspecificoEstacaoProposta(Base):
     __tablename__ = "obj_espec_estacoes_propostas"
 
-    codigo: Mapped[int] = mapped_column(
-        ForeignKey("estacao_flu.codigo"), primary_key=True
-    )
-    obj_1a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_1b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_2a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_2b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_2c: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_3a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_3b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_4a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_4b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_4c: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_4d: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_5a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_5b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6c: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6d: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6e: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6f: Mapped[int] = mapped_column(SmallInteger, nullable=True)
+    codigo: Mapped[int] = mapped_column(primary_key=True)
+    obj_1a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_1b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_2a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_2b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_2c: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_3a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_3b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_4a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_4b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_4c: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_4d: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_5a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_5b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6c: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6d: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6e: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6f: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    tipo_mapeamento: Mapped[str] = mapped_column(nullable=False)
 
 
 class EstacaoRedundante(Base):

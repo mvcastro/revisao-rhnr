@@ -253,7 +253,7 @@ def retorna_estacoes_rhnr_proposta(engine) -> list[dict[ColunaRHNRProposta, Any]
     return cast(list[dict[ColunaRHNRProposta, Any]], result)
 
 
-def retorna_objetivos_especificos(engine: Engine) -> list[dict]:
+def retorna_objetivos_especificos(engine: Engine) -> list[dict[str, int]]:
     with Session(engine) as session:
         response = (
             session.execute(select(ObjetivoEspecificoEstacaoProposta)).scalars().all()

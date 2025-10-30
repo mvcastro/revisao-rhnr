@@ -7,7 +7,6 @@ import streamlit as st
 
 from revisao_rhnr.app.data import (
     ColunaTabelaRHNRProposta,
-    df_estacoes_potenciais,
     df_estacoes_validadas,
     df_rhnr_inicial,
     df_rhnr_proposta,
@@ -34,11 +33,6 @@ def padroniza_dicionario_rhnr(dataframe: pd.DataFrame) -> dict:
 
 @st.cache_data
 def adiciona_estacoes_rhrn_inicial_e_validadas() -> pd.DataFrame:
-    
-    dict_ests_potenciais = padroniza_dicionario_rhnr(df_estacoes_potenciais)
-    df_rede_potencial = pd.DataFrame(dict_ests_potenciais)
-    df_rede_potencial["RHNR Inicial?"] = False
-    
     dict_rede_inicial = padroniza_dicionario_rhnr(df_rhnr_inicial)
     df_rede_inicial = pd.DataFrame(dict_rede_inicial)
     df_rede_inicial["RHNR Inicial?"] = True
@@ -68,7 +62,6 @@ def adiciona_estacoes_rhrn_inicial_e_validadas() -> pd.DataFrame:
                 df_rhnr_proposta,
                 df_rede_inicial_sem_proposta,
                 df_rede_validada_sem_inicial_e_sem_proposta,
-                df_rede_potencial
             ]
         )
         .sort_values(by="Código da Estação")
@@ -102,6 +95,19 @@ def revisao_rhnr() -> None:
         "#bc80bd",
         "#ccebc5",
         "#ffed6f",
+        "#a6cee3",
+        "#1f78b4",
+        "#b2df8a",
+        "#33a02c",
+        "#fb9a99",
+        "#e31a1c",
+        "#fdbf6f",
+        "#ff7f00",
+        "#cab2d6",
+        "#6a3d9a",
+        "#ffff99",
+        "#b15928",
+        
     ]
 
     df_rhnr_final = adiciona_estacoes_rhrn_inicial_e_validadas()
@@ -118,7 +124,6 @@ def revisao_rhnr() -> None:
         "Integra RHNR?",
         "Ação Proposta",
     ]
-    pill_dictionary = create_dictionary_select_options(df_rhnr_final, pills_options)
 
     coluna1, coluna2 = st.columns(2, vertical_alignment="center", border=True)
 
@@ -169,6 +174,7 @@ def revisao_rhnr() -> None:
         st.subheader(f"Número de estações selecionadas: {df_selecao.shape[0]}")
 
     if pill_selection:
+        pill_dictionary = create_dictionary_select_options(df_selecao, pills_options)
         st.dataframe(
             df_selecao.style.apply(
                 highlight_rows_by_category,

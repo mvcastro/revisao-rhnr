@@ -1,12 +1,9 @@
 import os
 from datetime import date
-from typing import Literal
 
 from dotenv import load_dotenv
 from sqlalchemy import ForeignKey, SmallInteger, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-
-TipoHidroRef = Literal["Área de Drenagem", "Nome do Rio", "Desmias Estações"]
 
 
 class Base(DeclarativeBase):
@@ -72,7 +69,7 @@ class Rio(Base):
 
     codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
     nome: Mapped[str]
-    jurisdicao: Mapped[int] = mapped_column(ForeignKey("estacoes.entidade.codigo"))
+    jurisdicao: Mapped[int] = mapped_column(ForeignKey("estacoes.entidade.codigo"), nullable=True)
     bacia_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.bacia.codigo"))
     subbacia_codigo: Mapped[int] = mapped_column(ForeignKey("estacoes.subbacia.codigo"))
 
@@ -153,7 +150,7 @@ class EstacaoPropostaRHNR(Base):
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
     tipo_estacao: Mapped[str] = mapped_column(String(5), nullable=False)
-    proposta_operacao_temp: Mapped[str] = mapped_column(nullable=True)
+    proposta_operacao_planilha: Mapped[str] = mapped_column(nullable=True)
     proposta_tipo: Mapped[str] = mapped_column(String(5), nullable=True)
     proposta_integra_rhnr: Mapped[bool] = mapped_column(nullable=True)
     observacao: Mapped[str] = mapped_column(nullable=True)
@@ -168,25 +165,26 @@ class ObjetivoEspecificoEstacaoProposta(Base):
     __table_args__ = {"schema": "revisao_rhnr"}
 
     codigo: Mapped[int] = mapped_column(primary_key=True)
-    obj_1a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_1b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_2a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_2b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_2c: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_3a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_3b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_4a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_4b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_4c: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_4d: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_5a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_5b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6a: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6b: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6c: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6d: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6e: Mapped[int] = mapped_column(SmallInteger, nullable=True)
-    obj_6f: Mapped[int] = mapped_column(SmallInteger, nullable=True)
+    obj_1a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_1b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_2a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_2b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_2c: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_3a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_3b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_4a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_4b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_4c: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_4d: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_5a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_5b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6a: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6b: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6c: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6d: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6e: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    obj_6f: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+    tipo_mapeamento: Mapped[str] = mapped_column(nullable=False)
 
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -200,34 +198,6 @@ class EstacaoRedundante(Base):
     codigo: Mapped[int] = mapped_column(nullable=False)
     codigo_redundante: Mapped[int] = mapped_column(nullable=False)
     tipo_estacao: Mapped[str] = mapped_column(String(10), nullable=False)
-
-
-class EstacaoHidroRef(Base):
-    __tablename__ = "estacaoes_hidrorreferenciadas"
-    __table_args__ = {"schema": "hidrorreferenciamento"}
-
-    codigo: Mapped[int] = mapped_column(primary_key=True)
-    area_drenagem: Mapped[float | None]
-    nome_rio: Mapped[str]
-    cotrecho: Mapped[str]
-    cocursodag: Mapped[str]
-    cobacia: Mapped[str]
-    noriocomp: Mapped[str]
-    nuareamont: Mapped[float]
-    distancia_m: Mapped[float]
-    tipo_href: Mapped[TipoHidroRef]
-
-
-class EstacaoComObjetivos(Base):
-    __tablename__ = "estacoes_objetivos_por_area2"
-    __table_args__ = {"schema": "objetivos_rhnr"}
-
-    codigo_estacao: Mapped[int] = mapped_column(primary_key=True)
-    cobacia_estacao: Mapped[str] = mapped_column(primary_key=True)
-    cobacia_obj: Mapped[str] = mapped_column(primary_key=True)
-    criterio: Mapped[str] = mapped_column(primary_key=True)
-    dist_obj_km: Mapped[float]
-    prop_areas: Mapped[float]
 
 
 if __name__ == "__main__":

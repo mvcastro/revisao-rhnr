@@ -10,7 +10,6 @@ from sqlalchemy import Engine, create_engine
 from revisao_rhnr.databases.database_access import (
     ColunaRHNRInicial,
     ColunaRHNRProposta,
-    retorna_estacoes_flu_por_codigos,
     retorna_estacoes_rhnr_proposta,
     retorna_estacoes_rhnr_selecao_inicial,
     retorna_estacoes_validadas_rhnr,
@@ -85,67 +84,6 @@ def get_db_engine(url: str):
 
 
 @st.cache_data
-def get_estacoes_potenciais_rhnr(
-    _engine: Engine, df_tipo_estacoes: pd.DataFrame
-) -> pd.DataFrame:
-    cod_ests_potenciais = [
-        12370000,
-        12530000,
-        13169900,
-        13405000,
-        13572000,
-        13700000,
-        14526000,
-        14526500,
-        15558000,
-        15558200,
-        16368000,
-        17091000,
-        17093000,
-        17120000,
-        17210000,
-        17343000,
-        18422000,
-        21300000,
-        24070000,
-        24200000,
-        24780000,
-        24900000,
-        50250000,
-        53790000,
-        54549000,
-        57476500,
-        57490000,
-        57550000,
-        57650000,
-        57700000,
-        57720000,
-        60010000,
-        60790000,
-        60930000,
-        60968000,
-        63900001,
-        63930000,
-        64506000,
-        65095000,
-        65948000,
-        65950200,
-        65990550,
-        66260006,
-        81160000,
-        83069900,
-        84071000,
-        84300000,
-        84551000,
-    ]
-    estacoes = retorna_estacoes_flu_por_codigos(_engine, cod_ests_potenciais)
-    estacoes_modificadas = formatar_campo_descricao(estacoes)
-    return pd.DataFrame(estacoes_modificadas).merge(
-        df_tipo_estacoes, on="Código da Estação", how="left"
-    )
-
-
-@st.cache_data
 def get_estacoes_selecao_inicial_rhnr(
     _engine: Engine, df_tipo_estacoes: pd.DataFrame
 ) -> pd.DataFrame:
@@ -159,7 +97,6 @@ def get_estacoes_selecao_inicial_rhnr(
 @st.cache_data
 def get_tipologia_estacoes(_engine: Engine) -> pd.DataFrame:
     tipologia_estacoes = retorna_tipologia_da_estacao(_engine)
-    print("tipologia_estacoes:", len(tipologia_estacoes))
     return pd.DataFrame(tipologia_estacoes)
 
 
@@ -189,7 +126,7 @@ def get_objetivos_especificos(_engine: Engine) -> pd.DataFrame:
         lista_objs = [
             nome_obj[4:]
             for nome_obj, tem_obj in objs.items()
-            if tem_obj and nome_obj != "codigo"
+            if tem_obj and nome_obj not in ["codigo", "tipo_mapeamento"]
         ]
         result.append(
             {
@@ -216,8 +153,7 @@ def join_dataframes_proposta_rhnr(
 
 # database_url = os.getenv("DATABASE_URL")
 database_url = f"sqlite:///{Path.cwd() / 'revisao_rhnr' / 'databases' / 'database.db'}"
-# print(database_url)
-# st.stop()
+
 
 if not database_url:
     st.error("DATABASE_URL not set in environment variables.")
@@ -235,4 +171,3 @@ df_rhnr_proposta = join_dataframes_proposta_rhnr(
     df_tipo_estacoes=df_tipo_estacoes,
     df_filtro=df_rhnr_inicial,
 )
-df_estacoes_potenciais = get_estacoes_potenciais_rhnr(engine, df_tipo_estacoes)
