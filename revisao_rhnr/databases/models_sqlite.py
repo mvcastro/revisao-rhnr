@@ -26,8 +26,8 @@ class EstacaoFlu(Base):
     municipio_codigo: Mapped[int] = mapped_column(ForeignKey("municipio.codigo"))
     ultima_atualizacao: Mapped[date]
     operando: Mapped[int]
-    descricao: Mapped[str]
-    historico: Mapped[str]
+    descricao: Mapped[str] = mapped_column(nullable=True)
+    historico: Mapped[str] = mapped_column(nullable=True)
 
 
 class Entidade(Base):
@@ -63,7 +63,9 @@ class Rio(Base):
         ForeignKey("estacao_flu.codigo"), primary_key=True
     )
     nome: Mapped[str]
-    jurisdicao: Mapped[int] = mapped_column(ForeignKey("entidade.codigo"), nullable=True)
+    jurisdicao: Mapped[int] = mapped_column(
+        ForeignKey("entidade.codigo"), nullable=True
+    )
     bacia_codigo: Mapped[int] = mapped_column(ForeignKey("bacia.codigo"))
     subbacia_codigo: Mapped[int] = mapped_column(ForeignKey("subbacia.codigo"))
 

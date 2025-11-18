@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Sequence, get_args
+from typing import Sequence, cast, get_args
 
 import numpy as np
 import pandas as pd
@@ -56,7 +56,7 @@ def adiciona_estacoes_rhrn_inicial_e_validadas() -> pd.DataFrame:
         )
     ]
 
-    return (
+    df_concat = (
         pd.concat(
             [
                 df_rhnr_proposta,
@@ -67,6 +67,10 @@ def adiciona_estacoes_rhrn_inicial_e_validadas() -> pd.DataFrame:
         .sort_values(by="Código da Estação")
         .reset_index(drop=True)
     )
+
+    # df_concat["Integra RHNR?"] = df_concat["Integra RHNR?"].fillna(False)
+
+    return df_concat
 
 
 @st.cache_data
@@ -107,7 +111,6 @@ def revisao_rhnr() -> None:
         "#6a3d9a",
         "#ffff99",
         "#b15928",
-        
     ]
 
     df_rhnr_final = adiciona_estacoes_rhrn_inicial_e_validadas()
@@ -119,7 +122,7 @@ def revisao_rhnr() -> None:
         "Operadora",
         "Bacia",
         "Operando",
-        "RHNR Implementada",
+        "RHNR Implementada?",
         "RHNR Inicial?",
         "Integra RHNR?",
         "Ação Proposta",
@@ -128,43 +131,85 @@ def revisao_rhnr() -> None:
     coluna1, coluna2 = st.columns(2, vertical_alignment="center", border=True)
 
     with coluna1:
-        select_campo = st.selectbox(
+        select_campo1 = st.selectbox(
             label="Campo da tabela:",
             index=None,
             options=list(select_dicionario.keys()),
             placeholder="Selecione um campo da tabela para filtrar",
+            key="select_campo1",
         )
+
     with coluna2:
-        if not select_campo:
-            valores_filtro = st.selectbox(
+        if not select_campo1:
+            valores_filtro1 = st.selectbox(
                 label="Valor do Filtro:",
                 options=[""],
                 disabled=True,
+                key="valores_filtro1",
             )
         else:
-            valores_filtro = st.selectbox(
+            valores_filtro1 = st.selectbox(
                 label="Selecione o valor a filtar:",
                 index=None,
                 options=[
                     option
-                    for option in select_dicionario[select_campo]
+                    for option in select_dicionario[select_campo1]
                     if option is not None
                 ],  # type: ignore
-                placeholder=f"Selecione um valor do campo {select_campo} para filtrar",
+                placeholder=f"Selecione um valor do campo {select_campo1} para filtrar",
+                key="valores_filtro1",
+            )
+
+    coluna3, coluna4 = st.columns(2, vertical_alignment="center", border=True)
+
+    with coluna3:
+        select_campo2 = st.selectbox(
+            label="Campo da tabela:",
+            index=None,
+            options=[i for i in list(select_dicionario.keys()) if i != select_campo1],
+            placeholder="Selecione um campo da tabela para filtrar",
+            key="select_campo2",
+        )
+    with coluna4:
+        if not select_campo2:
+            valores_filtro2 = st.selectbox(
+                label="Valor do Filtro:",
+                options=[""],
+                disabled=True,
+                key="valores_filtro2",
+            )
+        else:
+            valores_filtro2 = st.selectbox(
+                label="Selecione o valor a filtar:",
+                index=None,
+                options=[
+                    option
+                    for option in select_dicionario[
+                        cast(ColunaTabelaRHNRProposta, select_campo2)
+                    ]
+                    if option is not None
+                ],  # type: ignore
+                placeholder=f"Selecione um valor do campo {select_campo2} para filtrar",
+                key="valores_filtro2",
             )
 
     pill_selection = st.pills(
         "Coluna a destacar:", pills_options, selection_mode="single"
     )
 
-    if select_campo is not None:
-        # and valores_filtro is not None:
-        if valores_filtro is None:
-            df_selecao = df_rhnr_final[df_rhnr_final[select_campo].isna()]
+    if select_campo1 is not None:
+        if valores_filtro1 is None:
+            df_selecao = df_rhnr_final[df_rhnr_final[select_campo1].isna()]
         else:
-            df_selecao = df_rhnr_final[df_rhnr_final[select_campo] == valores_filtro]
+            df_selecao = df_rhnr_final[df_rhnr_final[select_campo1] == valores_filtro1]
     else:
         df_selecao = df_rhnr_final
+
+    if select_campo2 is not None:
+        if valores_filtro2 is None:
+            df_selecao = df_selecao[df_selecao[select_campo2].isna()]
+        else:
+            df_selecao = df_selecao[df_selecao[select_campo2] == valores_filtro2]
 
     coluna3, coluna4 = st.columns([0.6, 0.4], vertical_alignment="center")
 

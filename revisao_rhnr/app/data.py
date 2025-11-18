@@ -37,7 +37,7 @@ type ColunaTabelaRHNRInicial = Literal[
     "Operadora",
     "Bacia",
     "Operando",
-    "RHNR Implementada",
+    "RHNR Implementada?",
     "Objetivo 1",
     "Objetivo 2",
     "Objetivo 3",
@@ -57,7 +57,7 @@ type ColunaTabelaRHNRProposta = Literal[
     "Tipologia Atual",
     "Tipologia Mapeada",
     "RHNR Inicial?",
-    "RHNR Implementada",
+    "RHNR Implementada?",
     "Ação Proposta",
     "Tipologia Proposta",
     "Integra RHNR?",
@@ -71,7 +71,7 @@ def formatar_campo_descricao(estacoes: list[dict]) -> list[dict]:
         nova_estacao = {}
         for key, value in estacao.items():
             if key == "Descrição":
-                nova_estacao["RHNR Implementada"] = "RHNR" in str(value)
+                nova_estacao["RHNR Implementada?"] = "RHNR" in str(value)
             else:
                 nova_estacao[key] = value
         estacoes_modificadas.append(nova_estacao)
