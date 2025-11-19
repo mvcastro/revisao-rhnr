@@ -85,6 +85,18 @@ def create_dictionary_select_options(
     return result
 
 
+def filtro_dataframe(
+    df: pd.DataFrame, select_campo: str | None = None, valores_filtro: str | None = None
+) -> pd.DataFrame:
+    if select_campo is not None:
+        if valores_filtro is None:
+            return df[df[select_campo].isna()]
+        else:
+            return df[df[select_campo] == valores_filtro]
+    else:
+        return df
+
+
 def revisao_rhnr() -> None:
     colors = [
         "#8dd3c7",
@@ -128,9 +140,17 @@ def revisao_rhnr() -> None:
         "Ação Proposta",
     ]
 
-    coluna1, coluna2 = st.columns(2, vertical_alignment="center", border=True)
+    responsavel_ana = st.checkbox(label="Somente Responsável ANA?", value=True)
 
-    with coluna1:
+    df_selecao = (
+        df_rhnr_final[df_rhnr_final["Responsável"] == "ANA"]
+        if responsavel_ana
+        else df_rhnr_final
+    )
+
+    colunas1 = st.columns(2, vertical_alignment="center", border=True)
+
+    with colunas1[0]:
         select_campo1 = st.selectbox(
             label="Campo da tabela:",
             index=None,
@@ -139,7 +159,7 @@ def revisao_rhnr() -> None:
             key="select_campo1",
         )
 
-    with coluna2:
+    with colunas1[1]:
         if not select_campo1:
             valores_filtro1 = st.selectbox(
                 label="Valor do Filtro:",
@@ -159,10 +179,12 @@ def revisao_rhnr() -> None:
                 placeholder=f"Selecione um valor do campo {select_campo1} para filtrar",
                 key="valores_filtro1",
             )
+            
+    df_selecao = filtro_dataframe(df_selecao, select_campo1, valores_filtro1)
 
-    coluna3, coluna4 = st.columns(2, vertical_alignment="center", border=True)
+    colunas2 = st.columns(2, vertical_alignment="center", border=True)
 
-    with coluna3:
+    with colunas2[0]:
         select_campo2 = st.selectbox(
             label="Campo da tabela:",
             index=None,
@@ -170,7 +192,7 @@ def revisao_rhnr() -> None:
             placeholder="Selecione um campo da tabela para filtrar",
             key="select_campo2",
         )
-    with coluna4:
+    with colunas2[1]:
         if not select_campo2:
             valores_filtro2 = st.selectbox(
                 label="Valor do Filtro:",
@@ -192,30 +214,18 @@ def revisao_rhnr() -> None:
                 placeholder=f"Selecione um valor do campo {select_campo2} para filtrar",
                 key="valores_filtro2",
             )
+            
+    df_selecao = filtro_dataframe(df_selecao, select_campo2, valores_filtro2)
 
     pill_selection = st.pills(
         "Coluna a destacar:", pills_options, selection_mode="single"
     )
 
-    if select_campo1 is not None:
-        if valores_filtro1 is None:
-            df_selecao = df_rhnr_final[df_rhnr_final[select_campo1].isna()]
-        else:
-            df_selecao = df_rhnr_final[df_rhnr_final[select_campo1] == valores_filtro1]
-    else:
-        df_selecao = df_rhnr_final
+    colunas3 = st.columns([0.6, 0.4], vertical_alignment="center")
 
-    if select_campo2 is not None:
-        if valores_filtro2 is None:
-            df_selecao = df_selecao[df_selecao[select_campo2].isna()]
-        else:
-            df_selecao = df_selecao[df_selecao[select_campo2] == valores_filtro2]
-
-    coluna3, coluna4 = st.columns([0.6, 0.4], vertical_alignment="center")
-
-    with coluna3:
+    with colunas3[0]:
         st.subheader("Tabela de Revisão da RHNR")
-    with coluna4:
+    with colunas3[1]:
         st.subheader(f"Número de estações selecionadas: {df_selecao.shape[0]}")
 
     if pill_selection:
