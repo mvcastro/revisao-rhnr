@@ -140,12 +140,23 @@ def revisao_rhnr() -> None:
         "Ação Proposta",
     ]
 
-    responsavel_ana = st.checkbox(label="Somente Responsável ANA?", value=True)
 
+    col_check1, col_check2 = st.columns([0.2, 0.8], vertical_alignment="center")
+    with col_check1:
+        responsavel_ana = st.checkbox(label="Somente Responsável ANA", value=True)
+    with col_check2:
+        em_operacao = st.checkbox(label="Somente Estações em Operação", value=True)
+    
     df_selecao = (
         df_rhnr_final[df_rhnr_final["Responsável"] == "ANA"]
         if responsavel_ana
         else df_rhnr_final
+    )
+    
+    df_selecao = (
+        df_selecao[df_selecao["Operando"] == 1]
+        if em_operacao
+        else df_selecao
     )
 
     colunas1 = st.columns(2, vertical_alignment="center", border=True)
