@@ -1,6 +1,7 @@
 "Estações levantadas manualmente na Revisão RHNR pelo Flávio Troger"
 
 import os
+from typing import Literal
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -18,7 +19,7 @@ from revisao_rhnr.databases.models_postgres import (
 
 def retorna_tipologia_estacao(row: pd.Series) -> str:
     """Retorna a tipologia da estação com base nas colunas de tipologia da planilha do Excel."""
-    tipologia = []
+    tipologia: list[Literal["F", "D", "Q", "S", "T"]] = []
     if row["Escala"] == "Sim":
         tipologia.append("F")
     if row["Descarga líquida"] == "Sim":
@@ -42,7 +43,7 @@ def main():
     folder = "C:/Users/marco.goncalves/Downloads"
     filename = "RedeFLU-ANA_Poderia-ser-RHNR.xlsx"
 
-    dict_cols_comum_estacoes = {
+    dict_cols_comum_estacoes: dict[str, str | bool | None] = {
         "tipo_estacao": None,
         "proposta_operacao_planilha": None,
         "proposta_tipo": None,

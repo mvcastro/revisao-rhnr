@@ -103,7 +103,7 @@ def retorna_estacoes_flu_por_codigos(
             .where(EstacaoFlu.codigo.in_(codigos))
         )
 
-        result = [row._asdict() for row in response]
+        result = [row._asdict() for row in response] # type: ignore
     return cast(list[dict[ColunaRHNRInicial, Any]], result)
 
 
@@ -155,7 +155,7 @@ def retorna_estacoes_rhnr_selecao_inicial(
             )
         )
 
-        result = [row._asdict() for row in response]
+        result = [row._asdict() for row in response] # type: ignore
     return cast(list[dict[ColunaRHNRInicial, Any]], result)
 
 
@@ -202,11 +202,13 @@ def retorna_estacoes_validadas_rhnr(
             .where(EstacaoFlu.descricao.like("%RHNR%"))
         )
 
-        result = [row._asdict() for row in response]
+        result = [row._asdict() for row in response] # type: ignore
     return cast(list[dict[ColunaEstacaoValidadaRHNR, Any]], result)
 
 
-def retorna_estacoes_rhnr_proposta(engine) -> list[dict[ColunaRHNRProposta, Any]]:
+def retorna_estacoes_rhnr_proposta(
+    engine: Engine,
+) -> list[dict[ColunaRHNRProposta, Any]]:
     query_responsavel = (
         select(Responsavel.codigo_estacao, Entidade.sigla)
         .where(Responsavel.responsavel_codigo == Entidade.codigo)
@@ -249,7 +251,7 @@ def retorna_estacoes_rhnr_proposta(engine) -> list[dict[ColunaRHNRProposta, Any]
                 isouter=True,
             )
         )
-        result = [row._asdict() for row in response]
+        result = [row._asdict() for row in response] # type: ignore
     return cast(list[dict[ColunaRHNRProposta, Any]], result)
 
 
@@ -261,13 +263,18 @@ def retorna_objetivos_especificos(engine: Engine) -> list[dict[str, int]]:
     return [row.to_dict() for row in response]
 
 
-def retorna_tipologia_da_estacao(engine: Engine) -> list[dict]:
+type TipologiaDaEstacao = dict[
+    Literal["Código da Estação", "Tipologia Mapeada"], int | str
+]
+
+
+def retorna_tipologia_da_estacao(engine: Engine) -> list[TipologiaDaEstacao]:
     with Session(engine) as session:
         response = session.execute(select(TipoEstacaoFlu)).scalars().all()
 
-        rows: list[dict] = []
+        rows: list[TipologiaDaEstacao] = []
         for estacao in response:
-            sigla_tipologia = []
+            sigla_tipologia: list[Literal["F", "D", "S", "Q", "T"]] = []
             if estacao.escala:
                 sigla_tipologia.append("F")
             if estacao.descarga_liquida:

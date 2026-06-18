@@ -1,5 +1,5 @@
 from io import BytesIO
-from typing import Sequence, cast, get_args
+from typing import Literal, Sequence, cast, get_args
 
 import numpy as np
 import pandas as pd
@@ -13,13 +13,44 @@ from revisao_rhnr.app.data import (
 )
 from revisao_rhnr.app.paginas.dataframe_styling import highlight_rows_by_category
 
+type TipoOpcoes = float | str | bool | None
+
+CONVERSOR_OPCOES: dict[bool | None, str] = {True: "Sim", False: "Não", None: "Nulo"}
+CONVERSOR_OPCOES2: dict[Literal["Sim", "Não", "Nulo"], bool | None] = {
+    "Sim": True,
+    "Não": False,
+    "Nulo": None,
+}
+
+
 select_options: tuple[ColunaTabelaRHNRProposta] = get_args(
     ColunaTabelaRHNRProposta.__value__
 )
 
 
-def padroniza_dicionario_rhnr(dataframe: pd.DataFrame) -> dict:
-    dicionario = {}
+def converte_bool_to_str(valor: TipoOpcoes) -> str | float:
+    conversor: dict[bool | None, str] = {True: "Sim", False: "Não", None: "Nulo"}
+    if valor is None or isinstance(valor, bool):
+        return conversor[valor]
+    return valor
+
+
+def converte_str_to_bool(valor: TipoOpcoes) -> TipoOpcoes:
+    conversor: dict[Literal["Sim", "Não", "Nulo"], bool | None] = {
+        "Sim": True,
+        "Não": False,
+        "Nulo": None,
+    }
+
+    if valor in ["Sim", "Não", "Nulo"]:
+        return conversor[cast(Literal["Sim", "Não", "Nulo"], valor)]
+    return valor
+
+
+def padroniza_dicionario_rhnr(
+    dataframe: pd.DataFrame,
+) -> dict[TipoOpcoes, list[TipoOpcoes]]:
+    dicionario: dict[TipoOpcoes, list[TipoOpcoes]] = {}
     total_linhas = dataframe.shape[0]
     for col in dataframe.columns:
         if "Objetivo" in col:
@@ -76,8 +107,8 @@ def adiciona_estacoes_rhrn_inicial_e_validadas() -> pd.DataFrame:
 @st.cache_data
 def create_dictionary_select_options(
     dataframe: pd.DataFrame, columns: Sequence[ColunaTabelaRHNRProposta]
-) -> dict[ColunaTabelaRHNRProposta, list[str]]:
-    result = {}
+) -> dict[ColunaTabelaRHNRProposta, list[TipoOpcoes]]:
+    result: dict[ColunaTabelaRHNRProposta, list[TipoOpcoes]] = {}
     for column in columns:
         result[column] = (
             dataframe[column].replace(np.nan, None).sort_values().unique().tolist()
@@ -86,7 +117,7 @@ def create_dictionary_select_options(
 
 
 def filtro_dataframe(
-    df: pd.DataFrame, select_campo: str | None = None, valores_filtro: str | None = None
+    df: pd.DataFrame, select_campo: str | None = None, valores_filtro: TipoOpcoes = None
 ) -> pd.DataFrame:
     if select_campo is not None:
         if valores_filtro is None:
@@ -140,24 +171,19 @@ def revisao_rhnr() -> None:
         "Ação Proposta",
     ]
 
-
     col_check1, col_check2 = st.columns([0.2, 0.8], vertical_alignment="center")
     with col_check1:
         responsavel_ana = st.checkbox(label="Somente Responsável ANA", value=True)
     with col_check2:
         em_operacao = st.checkbox(label="Somente Estações em Operação", value=True)
-    
+
     df_selecao = (
         df_rhnr_final[df_rhnr_final["Responsável"] == "ANA"]
         if responsavel_ana
         else df_rhnr_final
     )
-    
-    df_selecao = (
-        df_selecao[df_selecao["Operando"] == 1]
-        if em_operacao
-        else df_selecao
-    )
+
+    df_selecao = df_selecao[df_selecao["Operando"] == 1] if em_operacao else df_selecao
 
     colunas1 = st.columns(2, vertical_alignment="center", border=True)
 
@@ -172,61 +198,124 @@ def revisao_rhnr() -> None:
 
     with colunas1[1]:
         if not select_campo1:
-            valores_filtro1 = st.selectbox(
+            valor_filtro1 = st.selectbox(
                 label="Valor do Filtro:",
                 options=[""],
                 disabled=True,
                 key="valores_filtro1",
             )
         else:
-            valores_filtro1 = st.selectbox(
+            valor_filtro1 = st.selectbox(
                 label="Selecione o valor a filtar:",
                 index=None,
                 options=[
-                    option
+                    converte_bool_to_str(option)
                     for option in select_dicionario[select_campo1]
-                    if option is not None
-                ],  # type: ignore
-                placeholder=f"Selecione um valor do campo {select_campo1} para filtrar",
+                ],
+                placeholder=f'Selecione um valor do campo " {select_campo1} " para filtrar',
                 key="valores_filtro1",
             )
-            
-    df_selecao = filtro_dataframe(df_selecao, select_campo1, valores_filtro1)
-
+    filtro1 = None
+    if valor_filtro1:
+        filtro1 = converte_str_to_bool(valor_filtro1)
+        df_selecao_out = filtro_dataframe(df_selecao, select_campo1, filtro1)
+    else:
+        df_selecao_out = df_selecao
+    condicao1 = st.radio(label="condição 1", options=["E", "OU"], horizontal=True)
     colunas2 = st.columns(2, vertical_alignment="center", border=True)
 
     with colunas2[0]:
+        disable_campo2 = True
+        if valor_filtro1:
+            disable_campo2 = False
+
         select_campo2 = st.selectbox(
             label="Campo da tabela:",
             index=None,
             options=[i for i in list(select_dicionario.keys()) if i != select_campo1],
             placeholder="Selecione um campo da tabela para filtrar",
             key="select_campo2",
+            disabled=disable_campo2,
         )
     with colunas2[1]:
         if not select_campo2:
-            valores_filtro2 = st.selectbox(
+            valor_filtro2 = st.selectbox(
                 label="Valor do Filtro:",
                 options=[""],
                 disabled=True,
                 key="valores_filtro2",
             )
         else:
-            valores_filtro2 = st.selectbox(
+            valor_filtro2 = st.selectbox(
                 label="Selecione o valor a filtar:",
                 index=None,
                 options=[
-                    option
+                    converte_bool_to_str(option)
                     for option in select_dicionario[
                         cast(ColunaTabelaRHNRProposta, select_campo2)
                     ]
-                    if option is not None
-                ],  # type: ignore
+                ],
                 placeholder=f"Selecione um valor do campo {select_campo2} para filtrar",
                 key="valores_filtro2",
             )
-            
-    df_selecao = filtro_dataframe(df_selecao, select_campo2, valores_filtro2)
+
+    filtro2 = None
+    if valor_filtro2:
+        filtro2 = converte_str_to_bool(valor_filtro2)
+
+    if condicao1 == "E" and all([filtro1, filtro2]):
+        df_selecao_out = filtro_dataframe(df_selecao_out, select_campo2, filtro2)
+    if condicao1 == "OU" and all([filtro1, filtro2]):
+        df_selecao_filtro1 = filtro_dataframe(df_selecao, select_campo1, filtro1)
+        df_selecao_filtro2 = filtro_dataframe(df_selecao, select_campo2, filtro2)
+        df_selecao_out = pd.concat(
+            [df_selecao_filtro1, df_selecao_filtro2]
+        ).drop_duplicates()
+
+    condicao2 = st.radio(label="condição 2", options=["E", "OU"], horizontal=True)
+    colunas3 = st.columns(2, vertical_alignment="center", border=True)
+
+    with colunas3[0]:
+        select_campo3 = st.selectbox(
+            label="Campo da tabela:",
+            index=None,
+            options=[i for i in list(select_dicionario.keys()) if i != select_campo2],
+            placeholder="Selecione um campo da tabela para filtrar",
+            key="select_campo3",
+        )
+    with colunas3[1]:
+        if not select_campo3:
+            valor_filtro3 = st.selectbox(
+                label="Valor do Filtro:",
+                options=[""],
+                disabled=True,
+                key="valores_filtro3",
+            )
+        else:
+            valor_filtro3 = st.selectbox(
+                label="Selecione o valor a filtar:",
+                index=None,
+                options=[
+                    converte_bool_to_str(option)
+                    for option in select_dicionario[
+                        cast(ColunaTabelaRHNRProposta, select_campo3)
+                    ]
+                ],
+                placeholder=f"Selecione um valor do campo {select_campo3} para filtrar",
+                key="valores_filtro3",
+            )
+
+    filtro3 = None
+    if valor_filtro3:
+        filtro3 = converte_str_to_bool(valor_filtro3)
+
+    if condicao2 == "E" and all([filtro1, filtro2, filtro3]):
+        df_selecao_out = filtro_dataframe(df_selecao_out, select_campo2, filtro3)
+    if condicao2 == "OU" and all([filtro1, filtro2, filtro3]):
+        df_selecao_filtro3 = filtro_dataframe(df_selecao, select_campo3, filtro3)
+        df_selecao_out = pd.concat(
+            [df_selecao_out, df_selecao_filtro3]
+        ).drop_duplicates()
 
     pill_selection = st.pills(
         "Coluna a destacar:", pills_options, selection_mode="single"
@@ -237,12 +326,14 @@ def revisao_rhnr() -> None:
     with colunas3[0]:
         st.subheader("Tabela de Revisão da RHNR")
     with colunas3[1]:
-        st.subheader(f"Número de estações selecionadas: {df_selecao.shape[0]}")
+        st.subheader(f"Número de estações selecionadas: {df_selecao_out.shape[0]}")
 
     if pill_selection:
-        pill_dictionary = create_dictionary_select_options(df_selecao, pills_options)
+        pill_dictionary = create_dictionary_select_options(
+            df_selecao_out, pills_options
+        )
         st.dataframe(
-            df_selecao.style.apply(
+            df_selecao_out.style.apply(
                 highlight_rows_by_category,
                 axis=1,
                 column=pill_selection,  # type: ignore
@@ -252,24 +343,24 @@ def revisao_rhnr() -> None:
             hide_index=True,
         )
     else:
-        st.dataframe(df_selecao, hide_index=True)
+        st.dataframe(df_selecao_out, hide_index=True)
 
     st.download_button(
         label="Download da Tabela",
-        data=to_excel(df_selecao),
+        data=to_excel(df_selecao_out),
         mime="application/vnd.ms-excel",
         file_name="revisao_rhnr.xlsx",
         type="primary",
     )
 
 
-def to_excel(df):
+def to_excel(df: pd.DataFrame):
     """
     Converts a Pandas DataFrame to an Excel file in-memory.
     """
     output = BytesIO()
     writer = pd.ExcelWriter(output, engine="openpyxl")
-    df.to_excel(writer, index=False)
+    df.to_excel(writer, index=False)  # type: ignore
     writer.close()  # Use writer.close() instead of writer.save() for newer pandas versions
     processed_data = output.getvalue()
     return processed_data
